@@ -1,4 +1,4 @@
-⚾ # BASEBALL SIMULATION - BISMO SPORTS # ⚾
+# ⚾ BASEBALL SIMULATION - BISMO SPORTS ⚾
 
 This right here is my homerun project. This is what got me into the world of programming and python.
 
