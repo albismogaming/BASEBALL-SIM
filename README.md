@@ -1,3 +1,5 @@
+⚾ # BASEBALL SIMULATION - BISMO SPORTS # ⚾
+
 This right here is my homerun project. This is what got me into the world of programming and python.
 
 I have always had a love for the game of baseball. I have also been really fascinated by simulations, data analyzaytion and those what if's in sports.
