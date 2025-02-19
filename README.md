@@ -1,4 +1,5 @@
 # ⚾ BASEBALL SIMULATION - BISMO SPORTS ⚾
+SIMULATION IN ACTION ===>> https://youtu.be/GgombSszShU?si=vjcQiJ8fwp3SC44A
 
 This right here is my homerun project. This is what got me into the world of programming and python.
 
