@@ -1,7 +1,7 @@
 # ⚾ BASEBALL SIMULATION - BISMO SPORTS ⚾
 SIMULATION IN ACTION ===>> https://youtu.be/GgombSszShU?si=vjcQiJ8fwp3SC44A
 
-* MOVE GAME DATA INTO SIM DOCS *
+* CURRENTLY STILL ADDING MORE FEATURES AND UTILIZING DATA TO CREATE A MORE IMMERSIVE EXPERIENCE *
 
 This right here is my homerun project. This is what got me into the world of programming and python.
 
