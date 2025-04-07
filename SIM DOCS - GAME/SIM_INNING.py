@@ -1,35 +1,9 @@
-import numpy as np
-import pandas as pd
-import sys
-import os
-from termcolor import colored
-from SIM_FUNCTIONS import *
-from SIM_ATBAT import *
-from SIM_ABPROBS import *
-from SIM_LGDATA import *
-from SIM_TEAM import *
-from SIM_SCOREBOARD import *
+from SIM_CORE import *
 from SIM_SETTINGS import *
-from SIM_PLAYER import *
-from SIM_BATTER import *
-from SIM_PITCHER import *
-from SIM_SINGLE import *
-from SIM_DOUBLE import *
-from SIM_TRIPLE import *
-from SIM_HOMERUN import *
-from SIM_HBP_BB import *
-from SIM_STRIKEOUTS import *
-from SIM_POPOUTS import *
-from SIM_GROUNDOUTS import *
-from SIM_FLYOUTS import *
-from SIM_LINEOUTS import *
-from SIM_PICKOFFS import *
-from SIM_WP_PB import *
-from SIM_STEALS import *
-from SIM_GAMESTATE import *
-from SIM_PITCH_MANAGER import *
-from SIM_LINEUP_MANAGER import *
+from SIM_UTILS import *
+from FILE_PATHS import *
 from SIM_DISPLAY_MANAGER import *
+import os, sys, time, string, pandas as pd, numpy as np
 
 class HalfInning:
     def __init__(self, batting_team, pitching_team, fielding_team, gamestate, scoreboard, league, home_team, matchups):
@@ -61,7 +35,7 @@ class HalfInning:
             # Check for walk-off win condition to immediately end the inning
             if self.gamestate.is_walk_off_scenario():
                 self.gamestate.set_walk_off()
-                print(colored(f"🎉🎉🎉🎉🎉🎉🎉\n!WALK-OFF WIN!\n🎉🎉🎉🎉🎉🎉🎉", 'white', attrs=['bold', 'blink']))
+                print(rgb_colored(f"🎉🎉🎉🎉🎉🎉🎉\n!WALK-OFF WIN!\n🎉🎉🎉🎉🎉🎉🎉", WHITE))
                 long_wait()
                 break
 

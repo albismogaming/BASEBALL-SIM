@@ -1,15 +1,12 @@
-import numpy as np
-import pandas as pd
-from termcolor import colored
-from SIM_GAMESTATE import *
-from SIM_TEAM import *
+from SIM_CORE import *
+from SIM_SETTINGS import *
+from SIM_UTILS import *
+from FILE_PATHS import *
 from SIM_PLAYER import *
 from SIM_BATTER import *
 from SIM_PITCHER import *
-from SIM_LINEUP_MANAGER import *
-from COLOR_CODES import *
-from SIM_FUNCTIONS import *
-from SIM_STATS_MANAGER import *
+from tabulate import tabulate
+import os, sys, time, string, pandas as pd, numpy as np
 
 class BoxScoreDisplay:
     def __init__(self, team):
@@ -69,61 +66,29 @@ class BoxScoreDisplay:
 
         return totals
 
-    def boxscore(self):
-        max_innings = max(len(self.gamestate.stats['away_team']['score_by_inning']), len(self.gamestate.stats['home_team']['score_by_inning']))
-
-        # Append 'X' if the game ends and the home team does not bat in what would be their half of the inning
-        if self.gamestate.current_inning >= INNINGS and self.gamestate.stats['home_team']['score'] > self.gamestate.stats['away_team']['score'] and self.gamestate.top_or_bottom == "TOP":
-            while len(self.gamestate.stats['home_team']['score_by_inning']) < self.gamestate.current_inning:  # Ensure there's space for 'X'
-                self.gamestate.stats['home_team']['score_by_inning'].append(0)  # Pad innings if needed before appending 'X'
-            self.gamestate.stats['home_team']['score_by_inning'][-1] = 'X'  # Replace the last 0 or append 'X'
-
-        # Coloring and preparing headers
-        headers = [colored("FINAL", 'yellow', attrs=['bold'])] + \
-                  [colored(f"{(i)}", 'yellow', attrs=['bold']) for i in range(1, max_innings + 1)] + \
-                  [colored("R", 'yellow', attrs=['bold']), 
-                   colored("H", 'yellow', attrs=['bold']), 
-                   colored("E", 'yellow', attrs=['bold'])]
-
-        away_row = [colored(f"{self.gamestate.away_team}", 'red', attrs=['bold'])] + \
-                   [colored(str(score), 'white', attrs=['bold']) for score in self.gamestate.stats['away_team']['score_by_inning']] + \
-                   [colored(str(self.gamestate.stats['away_team']['score']), 'red', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['away_team']['hits']), 'red', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['away_team']['errors']), 'red', attrs=['bold'])]
-
-        home_row = [colored(f"{self.gamestate.home_team}", 'blue', attrs=['bold'])] + \
-                   [colored(str(score), 'white', attrs=['bold']) for score in self.gamestate.stats['home_team']['score_by_inning']] + \
-                   [colored(str(self.gamestate.stats['home_team']['score']), 'blue', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['home_team']['hits']), 'blue', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['home_team']['errors']), 'blue', attrs=['bold'])]
-
-        print()
-        print(tabulate([away_row, home_row], headers=headers, tablefmt="heavy_grid", numalign="center", stralign="center"))
-        print()
-
     def display_batter_stats(self, batters):
         # # Prepare batter header and separators
         batter_header_line = self.format_row(self.batter_headers, self.batter_column_widths)
-        print(f"{colored((batter_header_line), 'yellow', attrs=['bold'])}")
+        print(f"{rgb_colored((batter_header_line), YELLOW)}")
         print(rgb_colored("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■".format(self.team), ASH_GRAY))
         for batter in batters:
             print_delay(rgb_colored(self.format_row(batter.get_stats_as_list(), self.batter_column_widths), BONE))
 
         # Print batter totals
         batter_totals = self.calculate_batter_totals(batters)
-        print(f"{colored(self.format_row(batter_totals, self.batter_column_widths), 'light_red', attrs=['bold'])}")
+        print(f"{rgb_colored(self.format_row(batter_totals, self.batter_column_widths), LIGHT_RED)}")
 
     def display_pitcher_stats(self, pitchers):
         # # Prepare pitcher header and separators
         pitcher_header_line = self.format_row(self.pitcher_headers, self.pitcher_column_widths)
-        print(f"{colored((pitcher_header_line), 'yellow', attrs=['bold'])}")
+        print(f"{rgb_colored((pitcher_header_line), YELLOW)}")
         print(rgb_colored("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■".format(self.team), ASH_GRAY))
         for pitcher in pitchers:
             print_delay(rgb_colored(self.format_row(pitcher.get_stats_as_list(), self.pitcher_column_widths), BONE))
 
         # Print pitcher totals
         pitcher_totals = self.calculate_pitcher_totals(pitchers)
-        print(f"{colored(self.format_row(pitcher_totals, self.pitcher_column_widths), 'light_red', attrs=['bold'])}")
+        print(f"{rgb_colored(self.format_row(pitcher_totals, self.pitcher_column_widths), LIGHT_RED)}")
 
     def display_team_stats(self):
         batters = [player for player in self.team.lineup_manager.players_used if isinstance(player, Batter)]

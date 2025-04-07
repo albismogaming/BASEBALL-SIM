@@ -1,22 +1,9 @@
-import os
-import sys
-import pandas as pd
-import numpy as np
-import time
-from SIM_FUNCTIONS import *
-from SIM_SCOREBOARD import *
-from SIM_SELECT import *
-from SIM_TEAM import *
-from SIM_ATBAT import *
-from SIM_INNING import *
-from SIM_BOXSTATS import *
+from SIM_CORE import *
 from SIM_SETTINGS import *
-from SIM_GAMESTATE import *
-from SIM_LINEUP_MANAGER import *
-from SIM_SCENARIO_MANAGER import *
-from SIM_DISPLAY_MANAGER import *
-from COLOR_CODES import *
+from SIM_UTILS import *
 from FILE_PATHS import *
+from SIM_DISPLAY_MANAGER import *
+import os, sys, time, string, pandas as pd, numpy as np
 
 class SimulateGame:
     def __init__(self, league, predefined_teams=None, use_predefined=False, seed=None):
@@ -93,9 +80,12 @@ if __name__ == "__main__":
     away = "NYY"
     home = "LAD"
     predefined_teams = (away, home)
-    simulation_game = SimulateGame(league, predefined_teams=predefined_teams, use_predefined=False, seed=RAND_SEED)
+    simulation_game = SimulateGame(league, predefined_teams=predefined_teams, use_predefined=True, seed=RAND_SEED)
     print()
     start = time.time()
     simulation_game.play_ball()
     finish = time.time()
     print(finish - start)
+
+
+

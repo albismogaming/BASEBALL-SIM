@@ -1,15 +1,12 @@
-import pandas as pd
-import numpy as np
-import sys
-import os
-from SIM_FUNCTIONS import *
-from SIM_SCOREBOARD import *
+from SIM_CORE import *
 from SIM_SETTINGS import *
-from SIM_GAMESTATE import *
 from SIM_UTILS import *
+from FILE_PATHS import *
 from SIM_DISPLAY_MANAGER import *
-from SIM_TEXT_MANAGER import *
 from SIM_HIT_RESULT import *
+from SIM_TEXT_MANAGER import *
+from SIM_SCENARIO_MANAGER import *
+import os, sys, time, string, pandas as pd, numpy as np
 
 class Groundout:
     def __init__(self, gamestate, league, pitcher, batter, runners=None, fielding_team=None, **kwargs):
@@ -21,6 +18,7 @@ class Groundout:
         self.fielding_team = fielding_team  # ✅ Fielding team (if applicable)
         self.outcomes = []  # ✅ Stores event text descriptions
         self.text_manager = TextManager()  # ✅ Manages outcome descriptions
+        self.scenario_manager = ScenarioManager()
         self.hit_information = HitInformation(gamestate, league, pitcher, batter, None)  # ✅ Handles hit data
         self.kwargs = kwargs  # ✅ Capture additional parameters if needed
 
@@ -33,6 +31,7 @@ class Groundout:
         base_state = self.gamestate.get_base_state()
         batter_side = get_batter_side(self.batter, self.pitcher)
         hit_direction, batted_ball_type, hit_location = self.hit_information.determine_hit_information("GROUNDOUT", batter_side)
+        runner_probs  = self.scenario_manager.get_probabilities("GROUNDOUT", base_state, batter_side, batted_ball_type, hit_direction, hit_location)
 
         self.outcomes.append(f"{self.batter.last_name.upper()} CHOPS ONE ON THE GROUND!")
 
@@ -168,7 +167,6 @@ class Groundout:
                     runs_scored += 1
                     self.outcomes.append("OUT AT 3RD! RUNNER ON 3RD SCORES! RUNNER ON 1ST ADVANCES TO 2ND! RUNNER SAFE AT FIRST!")
 
-
         elif base_state == "SECOND_AND_THIRD" and self.gamestate.outs < 2:
             rand_val = np.random.random()
             scoring_chance_third = 0.62
@@ -213,7 +211,6 @@ class Groundout:
                 else:  # 78% chance of runner on second moving to third
                     self.gamestate.move_runner('2ND', '3RD')
                     self.outcomes.append("RUNNER ON 2ND ADVANCES TO 3RD!")
-
 
         elif base_state == "FIRST_AND_SECOND" and self.gamestate.outs < 2:
             rand_val = np.random.random()
@@ -327,10 +324,9 @@ class Groundout:
                     self.gamestate.move_runner('HOME', '1ST', self.batter)
                     self.outcomes.append("OUT AT 2ND! RUNNER ON 3RD HOLDS! RUNNER SAFE AT FIRST!")
 
-
         elif base_state == "RUNNER_ON_FIRST" and self.gamestate.outs < 2:
             rand_val = np.random.random()
-            double_play_chance = rev_adjust_probability(0.45, self.runners.get('1ST').speed)
+            double_play_chance = rev_adjust_probability(runner_probs.get("R1_out", 0), self.runners.get('1ST').speed)
 
             if rand_val < double_play_chance:  # 23% chance of double play
                 outs_recorded += 2
@@ -346,11 +342,10 @@ class Groundout:
             else:
                 outs_recorded += 1
                 rand_val = np.random.random()
-                if rand_val < 0.43:
+                if rand_val < 0.79:
                     self.gamestate.move_runner('1ST', 'OUT')
                     self.gamestate.move_runner('HOME', '1ST', self.batter) 
                     self.outcomes.append("OUT AT 2ND! RUNNER SAFE AT FIRST!")
-
                 else:
                     self.gamestate.move_runner('1ST', '2ND')
                     self.gamestate.move_runner('HOME', 'OUT', self.batter) 
@@ -358,48 +353,46 @@ class Groundout:
 
         elif base_state == "RUNNER_ON_SECOND" and self.gamestate.outs < 2:
             rand_val = np.random.random()
-            advance_chance = 0.68
-            holding_chance = 0.31
-            advance_third_prob = adjust_probability(advance_chance, self.runners.get('2ND').speed)
-            hold_second_prob = adjust_probability(holding_chance, self.runners.get('2ND').speed)
+            advance_prob = adjust_probability(runner_probs.get("R2_adv", 0), self.runners.get('2ND').speed)
+            out_prob = adjust_probability(runner_probs.get("R2_adv", 0), self.runners.get('2ND').speed)
 
-            if rand_val < advance_third_prob:  # 55% chance of advancing to third, runner out at first
+            if rand_val < advance_prob:  # 55% chance of advancing to third, runner out at first
                 self.gamestate.move_runner('2ND', '3RD')
                 self.gamestate.move_runner('HOME', 'OUT', self.batter)
                 outs_recorded += 1
                 self.outcomes.append("THEY WILL GRAB THE EASY OUT AT 1ST! RUNNER ON 2ND ADVANCES TO 3RD!")
-            elif rand_val < advance_third_prob + hold_second_prob:  # 39% chance of holding at second, runner out at first
-                self.gamestate.move_runner('2ND', '2ND')
-                self.gamestate.move_runner('HOME', 'OUT', self.batter)
-                outs_recorded += 1
-                self.outcomes.append("THEY HOLD THE RUNNER AT 2ND AND FIRE IT TO 1ST FOR THE OUT!")
-            else:  # 6% chance of runner on second out and batter safe at first
+            elif rand_val < advance_prob + out_prob:  # 39% chance of holding at second, runner out at first
                 self.gamestate.move_runner('2ND', 'OUT')
                 self.gamestate.move_runner('HOME', '1ST', self.batter)
                 outs_recorded += 1
                 self.outcomes.append("RUNNER ON 2ND IS THROWN OUT AT 3RD! BATTER REACHES FIRST SAFELY!")
+            else:  # 6% chance of runner on second out and batter safe at first
+                self.gamestate.move_runner('2ND', '2ND')
+                self.gamestate.move_runner('HOME', 'OUT', self.batter)
+                outs_recorded += 1
+                self.outcomes.append("THEY HOLD THE RUNNER AT 2ND AND FIRE IT TO 1ST FOR THE OUT!")
 
         elif base_state == "RUNNER_ON_THIRD" and self.gamestate.outs < 2:
             rand_val = np.random.random()
-            scoring_chance = adjust_probability(0.450, self.runners.get('3RD').speed)
-            holding_chance = adjust_probability(0.545, self.runners.get('3RD').speed)
+            scoring_prob = adjust_probability(runner_probs.get("R3_scr", 0), self.runners.get('3RD').speed)
+            out_prob = adjust_probability(runner_probs.get("R3_out", 0), self.runners.get('3RD').speed)
 
-            if rand_val < scoring_chance:  # 33% chance of scoring, runner out at first
+            if rand_val < scoring_prob:  # 33% chance of scoring, runner out at first
                 self.gamestate.move_runner('3RD', 'HOME')
                 self.gamestate.move_runner('HOME', 'OUT', self.batter)
                 outs_recorded += 1
                 runs_scored += 1
                 self.outcomes.append("THEY WILL GRAB THE EASY OUT AT 1ST! RUNNER ON 3RD HUSTLES TO THE PLATE! 1 RUN SCORED!")
-            elif rand_val < scoring_chance + holding_chance:  # 52% chance of holding at third, runner out at first
-                self.gamestate.move_runner('3RD', '3RD')
-                self.gamestate.move_runner('HOME', 'OUT', self.batter)
-                outs_recorded += 1 
-                self.outcomes.append("THEY HOLD THE RUNNER AT 3RD AND FIRE IT TO 1ST FOR THE OUT!")
-            else:  # 15% chance of runner on third out and batter safe at first
+            elif rand_val < scoring_prob + out_prob:  # 52% chance of holding at third, runner out at first
                 self.gamestate.move_runner('3RD', 'OUT')
                 self.gamestate.move_runner('HOME', '1ST', self.batter)
                 outs_recorded += 1 
                 self.outcomes.append("RUNNER ON 3RD IS THROWN OUT AT HOME! BATTER REACHES FIRST SAFELY!")
+            else:  # 15% chance of runner on third out and batter safe at first
+                self.gamestate.move_runner('3RD', '3RD')
+                self.gamestate.move_runner('HOME', 'OUT', self.batter)
+                outs_recorded += 1 
+                self.outcomes.append("THEY HOLD THE RUNNER AT 3RD AND FIRE IT TO 1ST FOR THE OUT!")
 
         else:
             self.gamestate.move_runner('HOME', 'OUT', self.batter)

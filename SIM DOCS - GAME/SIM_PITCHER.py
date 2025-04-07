@@ -1,8 +1,9 @@
-import os
-import pandas as pd
-import numpy as np
-from SIM_PLAYER import *
+from SIM_CORE import *
+from SIM_SETTINGS import *
+from SIM_UTILS import *
 from FILE_PATHS import *
+from SIM_PLAYER import *
+import os, sys, time, string, pandas as pd, numpy as np
 
 class Pitcher(Player):
     def __init__(self, player_id, team, age, first_name, last_name, position, average, clutch, bats, throws, hit_outcomes, direction_outcomes, hit_strengths):
@@ -119,23 +120,22 @@ class Pitcher(Player):
             self.stats['earned_runs'] += earned_runs
             
     @staticmethod
-    def load_pitchers(filepath):
-        data = pd.read_csv(filepath)
+    def load_pitchers(df):
         pitchers = []
-        for _, row in data.iterrows():
+        for _, row in df.iterrows():
             hit_outcomes = {
-                'SINGLE': row['SINGLE'],
-                'DOUBLE': row['DOUBLE'],
-                'TRIPLE': row['TRIPLE'],
-                'HOMERUN': row['HOMERUN'],
-                'WALK': row['WALK'],
-                'STRIKEOUT': row['STRIKEOUT'],
-                'HBP': row['HBP'],
-                'OUT': row['OUT'],
-                'GROUNDOUT': row['GROUNDOUT'],
-                'FLYOUT': row['FLYOUT'],
-                'LINEOUT': row['LINEOUT'],
-                'POPOUT': row['POPOUT']
+                'SINGLE': float(row['SINGLE']),
+                'DOUBLE': float(row['DOUBLE']),
+                'TRIPLE': float(row['TRIPLE']),
+                'HOMERUN': float(row['HOMERUN']),
+                'WALK': float(row['WALK']),
+                'STRIKEOUT': float(row['STRIKEOUT']),
+                'HBP': float(row['HBP']),
+                'OUT': float(row['OUT']),
+                'GROUNDOUT': float(row['GROUNDOUT']),
+                'FLYOUT': float(row['FLYOUT']),
+                'LINEOUT': float(row['LINEOUT']),
+                'POPOUT': float(row['POPOUT']),
             }
             direction_outcomes = {
                 'PULL': row['Pull%'],

@@ -2,49 +2,28 @@ import time
 import sys
 import os
 import string
-import re
 import numpy as np
 import colorama
 from termcolor import colored
 from SIM_SETTINGS import *
 
 
-def strip_ansi(text):
-    """Remove ANSI color codes from text."""
-    return re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', text)
-
 @staticmethod
-def rgb_colored(text, rgb, bg_rgb=None, align=None, width=40):
+def rgb_colored(text, rgb, bg_rgb=None):
     """
-    Apply RGB color to text, with optional background color and alignment.
-    
+    Apply RGB color to text, with an optional background color.
+
     :param text: The text to color.
-    :param rgb: Tuple for text color (r, g, b).
-    :param bg_rgb: Optional tuple for background color (r, g, b).
-    :param align: Alignment ('left', 'center', 'right'), default None.
-    :param width: Width for alignment (default 40).
+    :param rgb: Tuple for the text color (r, g, b).
+    :param bg_rgb: Optional tuple for the background color (r, g, b).
     :return: Formatted text with RGB color.
     """
-    # Strip ANSI codes to get actual visible text width
-    stripped_text = strip_ansi(text)
-    
-    # Apply alignment before adding color
-    if align == "center":
-        formatted_text = stripped_text.center(width)
-    elif align == "right":
-        formatted_text = stripped_text.rjust(width)
-    elif align == "left":
-        formatted_text = stripped_text.ljust(width)
-    else:
-        formatted_text = stripped_text  # No alignment
-
-    # Apply color formatting
     r, g, b = rgb
     if bg_rgb:
         br, bg, bb = bg_rgb
-        return f"\033[1m\033[38;2;{r};{g};{b}m\033[48;2;{br};{bg};{bb}m{formatted_text}\033[0m"
+        return f"\033[1m\033[38;2;{r};{g};{b}m\033[48;2;{br};{bg};{bb}m{text}\033[0m"  # Bold with foreground and background
     else:
-        return f"\033[1m\033[38;2;{r};{g};{b}m{formatted_text}\033[0m"
+        return f"\033[1m\033[38;2;{r};{g};{b}m{text}\033[0m"  # Bold with foreground only
 
 def ordinal(n):
     return "%d%s" % (n,"TSNRHTDD"[(n//10%10!=1)*(n%10<4)*n%10::4])

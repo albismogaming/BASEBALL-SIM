@@ -1,8 +1,8 @@
-import os
-import json
-import numpy as np
-import pandas as pd
+from SIM_CORE import *
+from SIM_SETTINGS import *
+from SIM_UTILS import *
 from FILE_PATHS import *
+import os, sys, time, string, pandas as pd, numpy as np
 
 class Player:
     def __init__(self, player_id, team, base_path, age, first_name, last_name, position, average, clutch, bats, throws, field=None, speed=None, obp=None, babip=None, slg=None, ops=None, iso=None):
@@ -35,10 +35,9 @@ class Player:
         return f"{self.team}, {self.first_name} {self.last_name}, {self.position}"
 
     @staticmethod
-    def load_players(filepath):
-        data = pd.read_csv(filepath)
+    def load_players(df):
         players = []
-        for _, row in data.iterrows():
+        for _, row in df.iterrows():
             player = Player(
                 player_id=row['id'],
                 team=row['TM'],

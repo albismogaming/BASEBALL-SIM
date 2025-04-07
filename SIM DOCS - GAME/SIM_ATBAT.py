@@ -1,20 +1,12 @@
-import numpy as np
-import pandas as pd
-import time
-from termcolor import colored
-from collections import OrderedDict
-from SIM_FUNCTIONS import *
-from SIM_LGDATA import *
-from SIM_TEAM import *
+from SIM_CORE import *
 from SIM_SETTINGS import *
-from SIM_SCOREBOARD import *
-from SIM_ABPROBS import *
+from SIM_UTILS import *
+from FILE_PATHS import *
+from SIM_MATCHUPS import *
 from SIM_GEN_PIT_SEQ import *
 from SIM_HIT_RESULT import *
-from SIM_GAMESTATE import *
-from SIM_UTILS import *
-from COLOR_CODES import *
 from SIM_DISPLAY_MANAGER import *
+import os, sys, time, string, pandas as pd, numpy as np
 
 class AtBat:
     def __init__(self, batter, pitcher, league, home_team, gamestate, scoreboard, matchups):
@@ -171,6 +163,7 @@ class AtBat:
         probabilities = self.probability_adjuster.calculated_probability(POSITIVE_OUTCOMES, self.batter.hit_outcomes, self.pitcher.hit_outcomes, self.league.hit_outcomes, factors)
 
         probabilities['OUT'] = max(0, 1 - sum(probabilities.values()))
+
         outcome = np.random.choice(list(probabilities.keys()), p=list(probabilities.values()))
 
         if outcome == 'OUT':

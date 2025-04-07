@@ -1,10 +1,11 @@
-import os
-import numpy as np
-import pandas as pd
-from SIM_PLAYER import *
+from SIM_CORE import *
+from SIM_SETTINGS import *
+from SIM_UTILS import *
+from FILE_PATHS import *
 from SIM_BATTER import *
 from SIM_PITCHER import *
-from SIM_PITCH_MANAGER import *
+from SIM_PLAYER import *
+import os, sys, time, string, pandas as pd, numpy as np
 
 class LineupManager:
     def __init__(self, team_name, base_path):
@@ -30,12 +31,17 @@ class LineupManager:
         self.relief_pitchers = []
         self.fielders = []  # Clear fielders list
 
-        batter_filepath = os.path.join(self.base_path, self.team_name, f"{self.team_name}_BAT.csv")
-        all_batters = Batter.load_batters(batter_filepath)
+        # Load all batters and filter by team
+        bat_path = os.path.join(self.base_path, "ALT_BAT.csv")
+        bat_df = pd.read_csv(bat_path)
+        team_batters = bat_df[bat_df["TM"] == self.team_name]
+        all_batters = Batter.load_batters(team_batters)  # assuming this method exists
 
-        # Load pitchers
-        pitcher_filepath = os.path.join(self.base_path, self.team_name, f"{self.team_name}_PIT.csv")
-        all_pitchers = Pitcher.load_pitchers(pitcher_filepath)
+        # Load all pitchers and filter by team
+        pit_path = os.path.join(self.base_path, "ALT_PIT.csv")
+        pit_df = pd.read_csv(pit_path)
+        team_pitchers = pit_df[pit_df["TM"] == self.team_name]
+        all_pitchers = Pitcher.load_pitchers(team_pitchers)  # assuming this method exists
         
         # Define the required positions
         selected_batters = []

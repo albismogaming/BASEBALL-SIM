@@ -1,11 +1,9 @@
-import sys
-import os
-from termcolor import colored
-from tabulate import tabulate
-from SIM_FUNCTIONS import *
+from SIM_CORE import *
 from SIM_SETTINGS import *
-from SIM_GAMESTATE import *
-from COLOR_CODES import *
+from SIM_UTILS import *
+from FILE_PATHS import *
+from tabulate import tabulate
+import os, sys, time, string, pandas as pd, numpy as np
 
 class Scoreboard:
     def __init__(self, gamestate):
@@ -52,16 +50,16 @@ class Scoreboard:
         return runner
 
     def scoreboard(self):
-        network = colored(f"= MLB =", 'white', 'on_dark_grey', attrs=['bold'])
-        inn_tb = colored(" ▲ ", 'light_yellow', 'on_dark_grey', attrs=['bold']) if self.gamestate.top_or_bottom == "TOP" else colored(" ▼ ", 'light_yellow', 'on_dark_grey', attrs=['bold'])
-        inn = colored(f" {ordinal(self.gamestate.current_inning):4} ", 'light_yellow', 'on_dark_grey', attrs=['bold'])
-        outs = colored(f" {(self.gamestate.outs)} OUTS ", 'yellow', 'on_dark_grey', attrs=['bold'])
+        network = rgb_colored(f"= MLB =", WHITE, DARK_GRAY)
+        inn_tb = rgb_colored(" ▲ ", YELLOW, DARK_GRAY) if self.gamestate.top_or_bottom == "TOP" else rgb_colored(" ▼ ", YELLOW, DARK_GRAY)
+        inn = rgb_colored(f" {ordinal(self.gamestate.current_inning):4} ", YELLOW, DARK_GRAY)
+        outs = rgb_colored(f" {(self.gamestate.outs)} OUTS ", YELLOW, DARK_GRAY)
 
         a_t = rgb_colored(f"⚾️{self.gamestate.away_team}  ", WHITE, DODGER_BLUE)
-        a_s = colored(f" {(self.gamestate.stats['away_team']['score']):2} ", 'black', 'on_white', attrs=['bold'])
+        a_s = rgb_colored(f" {(self.gamestate.stats['away_team']['score']):2} ", BLACK, WHITE)
         
         h_t = rgb_colored(f"⚾️{self.gamestate.home_team}  ", WHITE, NAVY_BLUE)
-        h_s = colored(f" {(self.gamestate.stats['home_team']['score']):2} ", 'black', 'on_white', attrs=['bold'])
+        h_s = rgb_colored(f" {(self.gamestate.stats['home_team']['score']):2} ", BLACK, WHITE)
         
         div1 = rgb_colored(f"┃┃", WHITE)
         div2 = rgb_colored(f"┃", WHITE)
@@ -86,11 +84,11 @@ class Scoreboard:
 
 
     def playball_intro(self):
-        message = colored(f"┃┃   PLAY BALL!   ┃┃", 'white', attrs=['bold'])
+        message = rgb_colored(f"┃┃   PLAY BALL!   ┃┃", WHITE)
         playball_intro = f"""
-{colored(f"┏┳━━━━━━━━━━━━━━━━┳┓", 'white', attrs=['bold'])}
+{rgb_colored(f"┏┳━━━━━━━━━━━━━━━━┳┓", WHITE)}
 {message}
-{colored(f"┗┻━━━━━━━━━━━━━━━━┻┛", 'white', attrs=['bold'])}
+{rgb_colored(f"┗┻━━━━━━━━━━━━━━━━┻┛", WHITE)}
 """
         long_wait()
         print(playball_intro)
@@ -98,11 +96,11 @@ class Scoreboard:
 
 
     def start_inning(self):
-        message = colored(f"┃┃ START OF THE {ordinal(self.gamestate.current_inning):4} INN ┃┃", 'white', attrs=['bold'])
+        message = rgb_colored(f"┃┃ START OF THE {ordinal(self.gamestate.current_inning):4} INN ┃┃", WHITE)
         start_inning = f"""
-{colored(f"┏┳━━━━━━━━━━━━━━━━━━━━━━━┳┓", 'white', attrs=['bold'])}
+{rgb_colored(f"┏┳━━━━━━━━━━━━━━━━━━━━━━━┳┓", WHITE)}
 {message}
-{colored(f"┗┻━━━━━━━━━━━━━━━━━━━━━━━┻┛", 'white', attrs=['bold'])}
+{rgb_colored(f"┗┻━━━━━━━━━━━━━━━━━━━━━━━┻┛", WHITE)}
 """
         long_wait()
         print(start_inning)
@@ -110,60 +108,57 @@ class Scoreboard:
 
 
     def display_inning(self, inning_stage):
-        top = colored(f"┃       ┃ Rs ┃ Hs ┃ Es ┃", 'white', attrs=['bold'])
+        top = rgb_colored(f"┃       ┃ Rs ┃ Hs ┃ Es ┃", WHITE)
         if inning_stage == "MID":
-            bottom = colored(f" -  MID OF THE {ordinal(self.gamestate.current_inning):4} - ", 'white', attrs=['bold'])
+            bottom = rgb_colored(f" -  MID OF THE {ordinal(self.gamestate.current_inning):4} - ", WHITE)
         elif inning_stage == "END":
-            bottom = colored(f" -  END OF THE {ordinal(self.gamestate.current_inning):4} - ", 'white', attrs=['bold'])
+            bottom = rgb_colored(f" -  END OF THE {ordinal(self.gamestate.current_inning):4} - ", WHITE)
         else:
             raise ValueError("Invalid inning stage")
 
-        away_team = colored(f"⚾️{self.gamestate.away_team} ", 'white', 'on_red', attrs=['bold'])
-        away_score = colored(f" {self.gamestate.stats['away_team']['score']:2} ", 'black', 'on_white', attrs=['bold'])
-        away_hits = colored(f" {self.gamestate.stats['away_team']['hits']:2} ", 'black', 'on_white', attrs=['bold'])
-        away_errors = colored(f" {self.gamestate.stats['away_team']['errors']:2} ", 'black', 'on_white', attrs=['bold'])
-        home_team = colored(f"⚾️{self.gamestate.home_team} ", 'white', 'on_blue', attrs=['bold'])
-        home_score = colored(f" {self.gamestate.stats['home_team']['score']:2} ", 'black', 'on_white', attrs=['bold'])
-        home_hits = colored(f" {self.gamestate.stats['home_team']['hits']:2} ", 'black', 'on_white', attrs=['bold'])
-        home_errors = colored(f" {self.gamestate.stats['home_team']['errors']:2} ", 'black', 'on_white', attrs=['bold'])
+        away_team = rgb_colored(f"⚾️{self.gamestate.away_team} ", WHITE, RED)
+        away_score = rgb_colored(f" {self.gamestate.stats['away_team']['score']:2} ", BLACK, WHITE)
+        away_hits = rgb_colored(f" {self.gamestate.stats['away_team']['hits']:2} ", BLACK, WHITE)
+        away_errors = rgb_colored(f" {self.gamestate.stats['away_team']['errors']:2} ", BLACK, WHITE)
+        home_team = rgb_colored(f"⚾️{self.gamestate.home_team} ", WHITE, BLUE)
+        home_score = rgb_colored(f" {self.gamestate.stats['home_team']['score']:2} ", BLACK, WHITE)
+        home_hits = rgb_colored(f" {self.gamestate.stats['home_team']['hits']:2} ", BLACK, WHITE)
+        home_errors = rgb_colored(f" {self.gamestate.stats['home_team']['errors']:2} ", BLACK, WHITE)
 
         inning_display = f"""
-{colored(f"┏━━━━━━━┳━━━━┳━━━━┳━━━━┓", 'white', attrs=['bold'])}
-{colored(f"{top}", 'white', attrs=['bold'])}
-{colored(f"┣━━━━━━━╋━━━━╋━━━━╋━━━━┫", 'white', attrs=['bold'])}
-{colored(f"┃{away_team}┃{away_score}┃{away_hits}┃{away_errors}┃", 'white', attrs=['bold'])}
-{colored(f"┣━━━━━━━╋━━━━╋━━━━╋━━━━┫", 'white', attrs=['bold'])}
-{colored(f"┃{home_team}┃{home_score}┃{home_hits}┃{home_errors}┃", 'white', attrs=['bold'])}
-{colored(f"┣━━━━━━━┻━━━━┻━━━━┻━━━━┫", 'white', attrs=['bold'])}
-{colored(f"┃{bottom}┃", 'white', attrs=['bold'])}
-{colored(f"┗━━━━━━━━━━━━━━━━━━━━━━┛", 'white', attrs=['bold'])}
+{rgb_colored(f"┏━━━━━━━┳━━━━┳━━━━┳━━━━┓", WHITE)}
+{rgb_colored(f"{top}", WHITE)}
+{rgb_colored(f"┣━━━━━━━╋━━━━╋━━━━╋━━━━┫", WHITE)}
+{rgb_colored(f"┃{away_team}┃{away_score}┃{away_hits}┃{away_errors}┃", WHITE)}
+{rgb_colored(f"┣━━━━━━━╋━━━━╋━━━━╋━━━━┫", WHITE)}
+{rgb_colored(f"┃{home_team}┃{home_score}┃{home_hits}┃{home_errors}┃", WHITE)}
+{rgb_colored(f"┣━━━━━━━┻━━━━┻━━━━┻━━━━┫", WHITE)}
+{rgb_colored(f"┃{bottom}┃", WHITE)}
+{rgb_colored(f"┗━━━━━━━━━━━━━━━━━━━━━━┛", WHITE)}
 """
         long_wait()
         print(inning_display)
         long_wait()
 
-
     def middle_inning(self):
         self.display_inning("MID")
-
 
     def end_inning(self):
         self.display_inning("END")
 
-
     def final(self):
-        message = colored(f"      FINAL SCORE     ", 'white', attrs=['bold'])
-        away_team = colored(f"⚾️{self.gamestate.away_team} ", 'white', 'on_red', attrs=['bold'])
-        away_score = colored(f" {self.gamestate.stats['away_team']['score']:2} ", 'black', 'on_white', attrs=['bold'])
-        home_team = colored(f"⚾️{self.gamestate.home_team} ", 'white', 'on_blue', attrs=['bold'])
-        home_score = colored(f" {self.gamestate.stats['home_team']['score']:2} ", 'black', 'on_white', attrs=['bold'])
+        message = rgb_colored(f"      FINAL SCORE     ", WHITE)
+        away_team = rgb_colored(f"⚾️{self.gamestate.away_team} ", WHITE, RED)
+        away_score = rgb_colored(f" {self.gamestate.stats['away_team']['score']:2} ", BLACK, WHITE)
+        home_team = rgb_colored(f"⚾️{self.gamestate.home_team} ", WHITE, BLUE)
+        home_score = rgb_colored(f" {self.gamestate.stats['home_team']['score']:2} ", BLACK, WHITE)
 
         final_score = f"""
-{colored(f"┏┳━━━━━━━━━━━━━━━━━━━━━━━┳┓", 'white', attrs=['bold'])}
-{colored(f"┃┃{message} ┃┃", 'white', attrs=['bold'])}
-{colored(f"┣╋━━━━━━━━━━━┳━━━━━━━━━━━╋┫", 'white', attrs=['bold'])}
-{colored(f"┃┃{away_team}{away_score}┃{home_team}{home_score}┃┃", 'white', attrs=['bold'])}
-{colored(f"┗┻━━━━━━━━━━━┻━━━━━━━━━━━┻┛", 'white', attrs=['bold'])}
+{rgb_colored(f"┏┳━━━━━━━━━━━━━━━━━━━━━━━┳┓", WHITE)}
+{rgb_colored(f"┃┃{message} ┃┃", WHITE)}
+{rgb_colored(f"┣╋━━━━━━━━━━━┳━━━━━━━━━━━╋┫", WHITE)}
+{rgb_colored(f"┃┃{away_team}{away_score}┃{home_team}{home_score}┃┃", WHITE)}
+{rgb_colored(f"┗┻━━━━━━━━━━━┻━━━━━━━━━━━┻┛", WHITE)}
 """
         long_wait()
         print(final_score)
@@ -180,23 +175,23 @@ class Scoreboard:
             self.gamestate.stats['home_team']['score_by_inning'][-1] = 'X'  # Replace the last 0 or append 'X'
 
         # Coloring and preparing headers
-        headers = [colored("FINAL", 'yellow', attrs=['bold'])] + \
-                  [colored(f"{(i)}", 'yellow', attrs=['bold']) for i in range(1, max_innings + 1)] + \
-                  [colored("R", 'yellow', attrs=['bold']), 
-                   colored("H", 'yellow', attrs=['bold']), 
-                   colored("E", 'yellow', attrs=['bold'])]
+        headers = [rgb_colored("FINAL", YELLOW)] + \
+                  [rgb_colored(f"{(i)}", YELLOW) for i in range(1, max_innings + 1)] + \
+                  [rgb_colored("R", YELLOW), 
+                   rgb_colored("H", YELLOW), 
+                   rgb_colored("E", YELLOW)]
 
-        away_row = [colored(f"{self.gamestate.away_team}", 'red', attrs=['bold'])] + \
-                   [colored(str(score), 'white', attrs=['bold']) for score in self.gamestate.stats['away_team']['score_by_inning']] + \
-                   [colored(str(self.gamestate.stats['away_team']['score']), 'red', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['away_team']['hits']), 'red', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['away_team']['errors']), 'red', attrs=['bold'])]
+        away_row = [rgb_colored(f"{self.gamestate.away_team}", RED)] + \
+                   [rgb_colored(str(score), WHITE) for score in self.gamestate.stats['away_team']['score_by_inning']] + \
+                   [rgb_colored(str(self.gamestate.stats['away_team']['score']), RED), 
+                    rgb_colored(str(self.gamestate.stats['away_team']['hits']), RED), 
+                    rgb_colored(str(self.gamestate.stats['away_team']['errors']), RED)]
 
-        home_row = [colored(f"{self.gamestate.home_team}", 'blue', attrs=['bold'])] + \
-                   [colored(str(score), 'white', attrs=['bold']) for score in self.gamestate.stats['home_team']['score_by_inning']] + \
-                   [colored(str(self.gamestate.stats['home_team']['score']), 'blue', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['home_team']['hits']), 'blue', attrs=['bold']), 
-                    colored(str(self.gamestate.stats['home_team']['errors']), 'blue', attrs=['bold'])]
+        home_row = [rgb_colored(f"{self.gamestate.home_team}", BLUE)] + \
+                   [rgb_colored(str(score), WHITE) for score in self.gamestate.stats['home_team']['score_by_inning']] + \
+                   [rgb_colored(str(self.gamestate.stats['home_team']['score']), BLUE), 
+                    rgb_colored(str(self.gamestate.stats['home_team']['hits']), BLUE), 
+                    rgb_colored(str(self.gamestate.stats['home_team']['errors']), BLUE)]
 
         print()
         print(tabulate([away_row, home_row], headers=headers, tablefmt="heavy_grid", numalign="center", stralign="center"))
